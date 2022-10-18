@@ -1,6 +1,7 @@
 use std::{cmp::Ordering, fs};
 
-static SEPARATOR: u8 = 0b00110011;
+static SEPARATOR_UPPER: u8 = 0b01010101;
+static SEPARATOR_LOWER: u8 = 0b10101010;
 
 pub fn decompress(input_file: String, output_file: Option<String>) {
     let in_bytes = fs::read(input_file.clone()).unwrap();
@@ -12,9 +13,14 @@ pub fn decompress(input_file: String, output_file: Option<String>) {
 
     // get original file name
     let mut orig_file_name = String::from("");
-    while curr_byte != SEPARATOR {
-        orig_file_name.push(curr_byte as char);
-        curr_byte = in_bytes_iter.next().unwrap();
+    loop {
+        let next_byte = in_bytes_iter.next().unwrap();
+        if curr_byte == SEPARATOR_UPPER && next_byte == SEPARATOR_LOWER {
+            break;
+        } else {
+            orig_file_name.push(curr_byte as char);
+            curr_byte = next_byte;
+        }
     }
     curr_byte = in_bytes_iter.next().unwrap();
 
@@ -26,7 +32,7 @@ pub fn decompress(input_file: String, output_file: Option<String>) {
 
     // get encoding
     let mut lookup: Vec<Vec<(String, u8)>> = Vec::new();
-    while curr_byte != SEPARATOR {
+    loop {
         let symbol = curr_byte;
         println!("Symbol {}", symbol);
         let code_len = in_bytes_iter.next().unwrap();
@@ -55,6 +61,15 @@ pub fn decompress(input_file: String, output_file: Option<String>) {
         lookup[code_len as usize].push((code, symbol));
 
         curr_byte = in_bytes_iter.next().unwrap();
+        let mut peek = in_bytes_iter.clone().peekable();
+        let next_byte = match peek.peek() {
+            Some(p) => *p,
+            None => 0,
+        };
+        if curr_byte == SEPARATOR_UPPER && next_byte == SEPARATOR_LOWER {
+            in_bytes_iter.next();
+            break;
+        }
     }
     println!("Received code: {:?}", lookup);
 

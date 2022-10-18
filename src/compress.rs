@@ -2,7 +2,8 @@ use crate::binary_tree::BinaryNode;
 
 use std::fs;
 
-static SEPARATOR: u8 = 0b00110011;
+static SEPARATOR_UPPER: u8 = 0b01010101;
+static SEPARATOR_LOWER: u8 = 0b10101010;
 
 fn find_probs(bytes: Vec<u8>) -> Vec<(u8, f32)> {
     let mut num_each: Vec<u32> = Vec::new();
@@ -104,14 +105,16 @@ pub fn compress(input_file: String, output_file: String) {
     // write code to file for decompression
     let mut output: Vec<u8> = Vec::new();
     output.append(&mut Vec::from(input_file.clone().as_bytes()));
-    output.push(SEPARATOR);
+    output.push(SEPARATOR_UPPER);
+    output.push(SEPARATOR_LOWER);
     for c in huffman_code.iter() {
         output.push(c.0);
         output.push(c.1.len() as u8);
         output.extend_from_slice(&string_to_bin_u32(c.1.clone()).to_be_bytes());
     }
     println!("Output: {:?}", output);
-    output.push(SEPARATOR);
+    output.push(SEPARATOR_UPPER);
+    output.push(SEPARATOR_LOWER);
 
     let out_start_len = output.len();
 
