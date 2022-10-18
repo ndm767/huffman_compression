@@ -34,7 +34,6 @@ pub fn decompress(input_file: String, output_file: Option<String>) {
     let mut lookup: Vec<Vec<(String, u8)>> = Vec::new();
     loop {
         let symbol = curr_byte;
-        println!("Symbol {}", symbol);
         let code_len = in_bytes_iter.next().unwrap();
         let code_entries: [u8; 4] = [
             in_bytes_iter.next().unwrap(),
