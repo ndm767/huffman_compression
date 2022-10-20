@@ -1,6 +1,8 @@
+use crate::arg_handler::Args;
 use crate::binary_tree::BinaryNode;
 
 use std::fs;
+use std::path::Path;
 
 static SEPARATOR_UPPER: u8 = 0b01010101;
 static SEPARATOR_LOWER: u8 = 0b10101010;
@@ -55,7 +57,13 @@ fn vec_insert_val(v: &mut Vec<BinaryNode>, val: BinaryNode) {
     v.push(val);
 }
 
-pub fn compress(input_file: String, output_file: String) {
+pub fn compress(args: Args) {
+    let input_file = args.input_file;
+    let output_file = match args.output_file {
+        Some(s) => s,
+        None => String::from("out.hfm"),
+    };
+
     println!(
         "Compressing input_file {} to output_file {}",
         input_file, output_file
@@ -104,7 +112,15 @@ pub fn compress(input_file: String, output_file: String) {
 
     // write code to file for decompression
     let mut output: Vec<u8> = Vec::new();
-    output.append(&mut Vec::from(input_file.clone().as_bytes()));
+    let input_path = Path::new(&input_file);
+    output.append(&mut Vec::from(
+        format!(
+            "{}.{}",
+            input_path.file_stem().unwrap().to_str().unwrap(),
+            input_path.extension().unwrap().to_str().unwrap()
+        )
+        .as_bytes(),
+    ));
     output.push(SEPARATOR_UPPER);
     output.push(SEPARATOR_LOWER);
     for c in huffman_code.iter() {
@@ -147,7 +163,7 @@ pub fn compress(input_file: String, output_file: String) {
         }
     }
     if byte_pos != 0 {
-        curr_byte <<= 8 - byte_pos;
+        curr_byte <<= 7 - byte_pos;
         output.push(curr_byte);
     }
 

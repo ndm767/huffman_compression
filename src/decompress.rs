@@ -1,9 +1,13 @@
+use crate::arg_handler::Args;
+
 use std::{cmp::Ordering, fs};
 
 static SEPARATOR_UPPER: u8 = 0b01010101;
 static SEPARATOR_LOWER: u8 = 0b10101010;
 
-pub fn decompress(input_file: String, output_file: Option<String>) {
+pub fn decompress(args: Args) {
+    let input_file = args.input_file;
+
     let in_bytes = fs::read(input_file.clone()).unwrap();
     let in_len = in_bytes.len();
     println!("input len: {}", in_len);
@@ -25,7 +29,7 @@ pub fn decompress(input_file: String, output_file: Option<String>) {
     curr_byte = in_bytes_iter.next().unwrap();
 
     println!("Original file name: {}", orig_file_name);
-    let output_file = match output_file {
+    let output_file = match args.output_file {
         Some(o) => o,
         None => orig_file_name,
     };
