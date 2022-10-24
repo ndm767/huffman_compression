@@ -1,3 +1,4 @@
+use crate::archive::write_archive;
 use crate::arg_handler::Args;
 
 use std::{cmp::Ordering, fs};
@@ -8,9 +9,11 @@ static SEPARATOR_LOWER: u8 = 0b10101010;
 pub fn decompress(args: Args) {
     let input_file = args.input_file;
 
-    let in_bytes = fs::read(input_file.clone()).unwrap();
+    let mut in_bytes = fs::read(input_file.clone()).unwrap();
     let in_len = in_bytes.len();
     println!("input len: {}", in_len);
+    let last_byte = *in_bytes.last().clone().unwrap();
+    in_bytes.remove(in_bytes.len() - 1);
 
     let mut in_bytes_iter = in_bytes.into_iter();
     let mut curr_byte = in_bytes_iter.next().unwrap();
@@ -29,10 +32,6 @@ pub fn decompress(args: Args) {
     curr_byte = in_bytes_iter.next().unwrap();
 
     println!("Original file name: {}", orig_file_name);
-    let output_file = match args.output_file {
-        Some(o) => o,
-        None => orig_file_name,
-    };
 
     // get encoding
     let mut lookup: Vec<Vec<(String, u8)>> = Vec::new();
@@ -82,7 +81,13 @@ pub fn decompress(args: Args) {
     let mut curr_byte_res = in_bytes_iter.next();
     while curr_byte_res.is_some() {
         curr_byte = curr_byte_res.unwrap();
-        for i in 0..8 {
+        curr_byte_res = in_bytes_iter.next();
+        let end = if curr_byte_res.is_none() {
+            last_byte
+        } else {
+            8
+        };
+        for i in 0..end {
             if (curr_byte >> (7 - i) & 1) == 1 {
                 curr_str = format!("{}1", curr_str);
             } else {
@@ -98,12 +103,27 @@ pub fn decompress(args: Args) {
                 }
             }
         }
-        curr_byte_res = in_bytes_iter.next();
     }
 
-    let write_res = fs::write(output_file, output);
-    match write_res {
-        Ok(_) => {}
-        Err(e) => panic!("Decompression write error {}!", e),
+    if output[0..6].cmp(&[
+        'h' as u8, 'f' as u8, 'm' as u8, 'a' as u8, 'r' as u8, 'c' as u8,
+    ]) == Ordering::Equal
+    {
+        let output_dir = match args.output_file {
+            Some(s) => Some(s),
+            None => None,
+        };
+
+        write_archive(output, output_dir);
+    } else {
+        let output_file = match args.output_file {
+            Some(s) => s,
+            None => orig_file_name,
+        };
+        let write_res = fs::write(output_file, output);
+        match write_res {
+            Ok(_) => {}
+            Err(e) => panic!("Decompression write error {}!", e),
+        }
     }
 }

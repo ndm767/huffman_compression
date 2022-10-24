@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::env;
+use std::path::Path;
 
 pub struct Args {
     pub should_compress: bool,
@@ -42,6 +43,7 @@ pub fn get_args() -> Args {
                     Err(_) => arg_out.iter = None,
                 }
             } else {
+                arg_out.is_dir = Path::new(&a).is_dir();
                 arg_out.input_file = a;
             }
         }

@@ -1,6 +1,8 @@
+mod archive;
 mod arg_handler;
 mod binary_tree;
 mod compress;
+mod consts;
 mod decompress;
 
 use arg_handler::get_args;

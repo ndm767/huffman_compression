@@ -1,11 +1,10 @@
+use crate::archive::create_archive;
 use crate::arg_handler::Args;
 use crate::binary_tree::BinaryNode;
+use crate::consts::{SEPARATOR_LOWER, SEPARATOR_UPPER};
 
 use std::fs;
 use std::path::Path;
-
-static SEPARATOR_UPPER: u8 = 0b01010101;
-static SEPARATOR_LOWER: u8 = 0b10101010;
 
 fn find_probs(bytes: Vec<u8>) -> Vec<(u8, f32)> {
     let mut num_each: Vec<u32> = Vec::new();
@@ -70,7 +69,19 @@ pub fn compress(args: Args) {
     );
 
     // read file and get frequencies
-    let in_bytes = fs::read(input_file.clone()).unwrap();
+    let in_bytes = if args.is_dir {
+        let dir_res = fs::read_dir(input_file.clone()).unwrap();
+        let mut file_vec: Vec<String> = Vec::new();
+        for i in dir_res {
+            match i {
+                Ok(d) => file_vec.push(String::from(d.path().to_str().unwrap())),
+                Err(e) => println!("Dir entry error {:?}!", e),
+            }
+        }
+        create_archive(file_vec)
+    } else {
+        fs::read(input_file.clone()).unwrap()
+    };
     let in_size = in_bytes.len();
     println!("input size: {}", in_size);
 
@@ -99,7 +110,8 @@ pub fn compress(args: Args) {
         );
     }
 
-    let huffman_code = tree[0].get_huffman_code();
+    let mut huffman_code = tree[0].get_huffman_code();
+    huffman_code.sort_by(|a, b| a.0.cmp(&b.0));
     println!("Generated code: {:?}", huffman_code);
 
     let csize = tree[0].get_comp_size(alphabet, in_size);
@@ -113,14 +125,18 @@ pub fn compress(args: Args) {
     // write code to file for decompression
     let mut output: Vec<u8> = Vec::new();
     let input_path = Path::new(&input_file);
-    output.append(&mut Vec::from(
-        format!(
-            "{}.{}",
-            input_path.file_stem().unwrap().to_str().unwrap(),
-            input_path.extension().unwrap().to_str().unwrap()
-        )
-        .as_bytes(),
-    ));
+    if args.is_dir {
+        output.append(&mut Vec::from(input_file.as_bytes()))
+    } else {
+        output.append(&mut Vec::from(
+            format!(
+                "{}.{}",
+                input_path.file_stem().unwrap().to_str().unwrap(),
+                input_path.extension().unwrap().to_str().unwrap()
+            )
+            .as_bytes(),
+        ));
+    }
     output.push(SEPARATOR_UPPER);
     output.push(SEPARATOR_LOWER);
     for c in huffman_code.iter() {
@@ -128,7 +144,6 @@ pub fn compress(args: Args) {
         output.push(c.1.len() as u8);
         output.extend_from_slice(&string_to_bin_u32(c.1.clone()).to_be_bytes());
     }
-    println!("Output: {:?}", output);
     output.push(SEPARATOR_UPPER);
     output.push(SEPARATOR_LOWER);
 
@@ -163,8 +178,9 @@ pub fn compress(args: Args) {
         }
     }
     if byte_pos != 0 {
-        curr_byte <<= 7 - byte_pos;
+        curr_byte <<= 8 - byte_pos;
         output.push(curr_byte);
+        output.push(byte_pos as u8);
     }
 
     println!(
