@@ -88,9 +88,7 @@ pub fn write_archive(archive: Vec<u8>, dirname: Option<String>) {
             };
             let mkdir_res = fs::create_dir(dir_path.clone());
             match mkdir_res {
-                Ok(_) => {
-                    println!("Made dir {}!", dir_path.clone());
-                }
+                Ok(_) => {}
                 Err(e) => {
                     panic!("Could not make directory {} error {}!", dir_path, e);
                 }
@@ -101,12 +99,9 @@ pub fn write_archive(archive: Vec<u8>, dirname: Option<String>) {
                 Some(d) => format!("{}/{}", d, fname),
                 None => format!("{}", fname),
             };
-            println!("dirname: {:?}, out_file: {}", dirname, out_file);
             let write_res = fs::write(out_file.clone(), f_bytes);
             match write_res {
-                Ok(_) => {
-                    println!("Extracted file {}", out_file);
-                }
+                Ok(_) => {}
                 Err(e) => panic!("Could not make file {} error {}!", out_file, e),
             }
         }
