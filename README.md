@@ -13,6 +13,6 @@ Kind of a spinoff of [https://github.com/ndm767/huffman](https://github.com/ndm7
 
 Test data gotten from [The Canterbury Corpus](https://corpus.canterbury.ac.nz/descriptions/).  
 
-[enwik8](http://www.mattmahoney.net/dc/text.html) benchmark results (using release build profile):  
-compress 96M -> 61M in 2.63s  
-decompress 61M -> 96M in 50.79s
+[Large Text Compression Benchmark](http://www.mattmahoney.net/dc/text.html) benchmark results (using release build profile):  
+enwik8 compress 96M -> 61M in 2.96s  
+enwik8 decompress 61M -> 96M in 3.03s

@@ -34,7 +34,7 @@ pub fn decompress(args: Args) {
     println!("Original file name: {}", orig_file_name);
 
     // get encoding
-    let mut lookup: Vec<Vec<(String, u8)>> = Vec::new();
+    let mut lookup: Vec<Vec<i16>> = Vec::new();
     loop {
         let symbol = curr_byte;
         let code_len = in_bytes_iter.next().unwrap();
@@ -44,23 +44,16 @@ pub fn decompress(args: Args) {
             in_bytes_iter.next().unwrap(),
             in_bytes_iter.next().unwrap(),
         ];
-        let mut code_num = u32::from_be_bytes(code_entries);
+        let code_num = u32::from_be_bytes(code_entries);
 
-        let mut code: String = String::from("");
         while lookup.len() <= code_len as usize {
             lookup.push(Vec::new());
         }
-
-        for _i in 0..code_len {
-            let curr_val = code_num & 1;
-            code_num >>= 1;
-            if curr_val == 1 {
-                code = format!("1{}", code);
-            } else {
-                code = format!("0{}", code);
-            }
+        while lookup[code_len as usize].len() <= code_num as usize {
+            lookup[code_len as usize].push(-1);
         }
-        lookup[code_len as usize].push((code, symbol));
+
+        lookup[code_len as usize][code_num as usize] = symbol as i16;
 
         curr_byte = in_bytes_iter.next().unwrap();
         let mut peek = in_bytes_iter.clone().peekable();
@@ -73,11 +66,11 @@ pub fn decompress(args: Args) {
             break;
         }
     }
-    println!("Received code: {:?}", lookup);
 
     // actually read the text:
     let mut output: Vec<u8> = Vec::new();
-    let mut curr_str: String = String::from("");
+    let mut curr_symb: u32 = 0;
+    let mut curr_symb_len: u8 = 0;
     let mut curr_byte_res = in_bytes_iter.next();
     while curr_byte_res.is_some() {
         curr_byte = curr_byte_res.unwrap();
@@ -88,19 +81,24 @@ pub fn decompress(args: Args) {
             8
         };
         for i in 0..end {
+            curr_symb <<= 1;
+            curr_symb_len += 1;
             if (curr_byte >> (7 - i) & 1) == 1 {
-                curr_str = format!("{}1", curr_str);
-            } else {
-                curr_str = format!("{}0", curr_str);
+                curr_symb += 1;
             }
 
-            if lookup[curr_str.len()].len() != 0 {
-                for s in &lookup[curr_str.len()] {
-                    if curr_str.cmp(&s.0) == Ordering::Equal {
-                        output.push(s.1);
-                        curr_str = String::from("");
+            if (curr_symb_len as usize) < lookup.len() {
+                let curr_lookup_vec = &lookup[curr_symb_len as usize];
+                if (curr_symb as usize) < curr_lookup_vec.len() {
+                    let curr_lookup = curr_lookup_vec[curr_symb as usize];
+                    if curr_lookup != -1 {
+                        output.push(curr_lookup as u8);
+                        curr_symb = 0;
+                        curr_symb_len = 0;
                     }
                 }
+            } else {
+                panic!("Code {:#16b}/{} is not in lookup!", curr_symb, curr_symb);
             }
         }
     }

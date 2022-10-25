@@ -130,9 +130,12 @@ pub fn compress(args: Args) {
     } else {
         output.append(&mut Vec::from(
             format!(
-                "{}.{}",
+                "{}{}",
                 input_path.file_stem().unwrap().to_str().unwrap(),
-                input_path.extension().unwrap().to_str().unwrap()
+                match input_path.extension() {
+                    Some(s) => format!(".{}", s.to_str().unwrap()),
+                    None => String::from(""),
+                }
             )
             .as_bytes(),
         ));
