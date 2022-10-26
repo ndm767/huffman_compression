@@ -75,7 +75,7 @@ pub fn decompress(args: Args) {
     while curr_byte_res.is_some() {
         curr_byte = curr_byte_res.unwrap();
         curr_byte_res = in_bytes_iter.next();
-        let end = if curr_byte_res.is_none() {
+        let end = if curr_byte_res.is_none() && last_byte != 0 {
             last_byte
         } else {
             8

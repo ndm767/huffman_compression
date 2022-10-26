@@ -183,8 +183,8 @@ pub fn compress(args: Args) {
     if byte_pos != 0 {
         curr_byte <<= 8 - byte_pos;
         output.push(curr_byte);
-        output.push(byte_pos as u8);
     }
+    output.push(byte_pos as u8);
 
     println!(
         "Output size: {} ({} without header)",
