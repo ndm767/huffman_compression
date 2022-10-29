@@ -31,7 +31,7 @@ pub fn get_args() -> Args {
         {
             arg_out.should_compress = true;
         } else if a.cmp(&String::from("decompress")) == Ordering::Equal
-            || a.cmp(&String::from("c")) == Ordering::Equal
+            || a.cmp(&String::from("d")) == Ordering::Equal
         {
             arg_out.should_compress = false;
         } else {
