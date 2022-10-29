@@ -1,10 +1,8 @@
 use crate::archive::write_archive;
 use crate::arg_handler::Args;
+use crate::consts::{SEPARATOR_LOWER, SEPARATOR_UPPER};
 
 use std::{cmp::Ordering, fs};
-
-static SEPARATOR_UPPER: u8 = 0b01010101;
-static SEPARATOR_LOWER: u8 = 0b10101010;
 
 pub fn decompress(args: Args) {
     let input_file = args.input_file;
@@ -107,12 +105,7 @@ pub fn decompress(args: Args) {
         'h' as u8, 'f' as u8, 'm' as u8, 'a' as u8, 'r' as u8, 'c' as u8,
     ]) == Ordering::Equal
     {
-        let output_dir = match args.output_file {
-            Some(s) => Some(s),
-            None => None,
-        };
-
-        write_archive(output, output_dir);
+        write_archive(output, args.output_file);
     } else {
         let output_file = match args.output_file {
             Some(s) => s,
